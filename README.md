@@ -1,37 +1,30 @@
-# YAD_GNN
+# YAD GNN
 
 ### How to use
 
 please refer the utils/option.py file
 
+* Deep learning model: GNN
 ```
-python main.py --dataset=hcp_rest --window_siz=25 --window_stride=2 --readout=sero --target=Gender
-
+ python ./dl/experiment.py --dataset=YAD+HCP+EMBARC --label-name=MaDE --early-stop --gnn-type=MSGNN --conn-type=ec_twostep_lam1
 ```
-
+* Classic machine learning model: SVM, LR
+```
+ python ./ml/experiment.py -run_all
+```
 ### Hyperparameter optimization
-* window length: [25, 50]
-* window stride: [1, 2, 3]
-* hidden dimension
-* sparsity: [10, 20, 30, 40, 50]
-* lr: [5e-4]
-* max_lr: [1e-3]
-* reg_lambda: [1e-5]
-* num layer: [2, 3, 4, 5]
-* num_head: [1, 3, 5]
-* num_epochs: [30, 50]
-* minibatch size: [3]
-* readout: ['garo', 'sero', 'mean']
-* cls_token: ['sum', 'mean', 'param']
-
+ 
+* "gnn_type": tune.choice(["GIN", "GAT", "MSGNN"]),
+* "conn_type": tune.choice(["sfc", "pc", "ec_dlingam", 
+* "ec_twostep_lam1", "ec_twostep_lam8", "ec_granger"]),
+* "dropout": tune.choice([0.0, 0.2, 0.4, 0.6]),
+* "z_dim": tune.choice([16, 32]),
+* "hidden_dim": tune.choice([32, 64, 128]),
+* "layer_num": tune.choice([2, 4, 6]),
 
 ### Tasks
 * classification: Gender, MaDE, suicide_risk, site
 * regression: PHQ-9
-
-
-# New models
-![concepts](https://user-images.githubusercontent.com/47490745/164171539-c6707466-0a8c-40a4-9770-50e686c82c4f.png)
 
 
 # Backend for GNN
