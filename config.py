@@ -1,0 +1,1 @@
+base_dir = "/home/surprise/YAD_STAGIN"
