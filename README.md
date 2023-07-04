@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # YAD_STAGIN
 
 ### How to use
@@ -42,7 +41,3 @@ python main.py --dataset=hcp_rest --window_siz=25 --window_stride=2 --readout=se
     - more useful utility functions for torch-geometric
     
 * pytorch-lightning to enhance readability & reproduciblility
-=======
-# YAD_GNN
-YAD_GNN project
->>>>>>> 071c475e3b69c635240ae5eb3c05b763fb85d817
