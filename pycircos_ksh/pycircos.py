@@ -1145,7 +1145,7 @@ class Gcircle:
                 intrp_pts = round(len(intrp_polar)/2)
                 indices = [round(intrp_pts*0.1), round(intrp_pts*0.8)]
                 for idx in indices:
-                    arrow = mpatches.FancyArrowPatch(intrp_polar[idx], intrp_polar[idx+1], arrowstyle="-|>", facecolor=facecolor, edgecolor="#ff8c0080",  lw=1, transform=self.ax.transData, mutation_scale=12)
+                    arrow = mpatches.FancyArrowPatch(intrp_polar[idx], intrp_polar[idx+1], arrowstyle="-|>", facecolor=facecolor, edgecolor=edgecolor,  lw=1, transform=self.ax.transData, mutation_scale=12)
                     self.ax.add_patch(arrow)
 
     def tickplot(self, garc_id, raxis_range=None, tickinterval=1000, tickpositions=None, ticklabels=None, tickwidth=1, tickcolor="#303030", ticklabeldirection="outer"):  

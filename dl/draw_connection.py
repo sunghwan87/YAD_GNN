@@ -24,6 +24,7 @@ parser.add_argument('-tp', '--top', type=int, default=20)
 
 def get_ipsilateral_mask(df, size):
     indices = []
+    df['nodes'] = df['Anatomy'].str.replace("\d+","").replace('Striate', 'ExStr').replace()
     for roi in df['nodes'].unique():
         samename = df.loc[df['nodes']==roi]
         if samename.shape[0]!=1: 
@@ -75,16 +76,22 @@ def draw_ipsilateral_connection(
     savefig = None
 ):
     mask = get_ipsilateral_mask(df, adj_conn_contrast.shape)
+    
     adj_masked = adj*mask
+    fig = plt.figure(figsize=(5,5))
+    sns.heatmap(adj_masked, square=True)
+    fig.savefig(savefig.replace(".png", "_mask.png"))
+    plt.close()
     vis_id = np.concatenate(np.where(adj_masked!=0))
     vis_id.sort()
     vis_id_mat = np.array(np.meshgrid(vis_id,vis_id)).T.reshape(-1,2).swapaxes(0,1)
-    from nilearn import plotting
+    node_coords = df[['x','y','z']].to_numpy()
     plotting.plot_connectome(
             adjacency_matrix = adj_masked[vis_id,:][:,vis_id], 
             node_coords = node_coords[vis_id,:],
             title = 'ipsilateral',
-            output_file = savefig,
+            output_file = savefig,            
+            edge_kwargs = {'linewidth':0.5},
         )
     return True
 
@@ -102,13 +109,14 @@ def draw_intranetwork_connection(
         vis_id = np.concatenate(np.where(adj_masked!=0))
         vis_id.sort()
         vis_id_mat = np.array(np.meshgrid(vis_id,vis_id)).T.reshape(-1,2).swapaxes(0,1)
-        from nilearn import plotting
+        node_coords = df[['x','y','z']].to_numpy()
         plotting.plot_connectome(
                 adjacency_matrix = adj_masked[vis_id,:][:,vis_id], 
                 node_coords = node_coords[vis_id,:],
                 title = network,
                 axes = axes[i],
                 output_file = savefig,
+                edge_kwargs = {'linewidth':0.5},
             )
     return True
 
@@ -122,12 +130,13 @@ def draw_internetwork_connection(
     vis_id = np.concatenate(np.where(adj_masked!=0))
     vis_id.sort()
     vis_id_mat = np.array(np.meshgrid(vis_id,vis_id)).T.reshape(-1,2).swapaxes(0,1)
-    from nilearn import plotting
+    node_coords = df[['x','y','z']].to_numpy()
     plotting.plot_connectome(
             adjacency_matrix = adj_masked[vis_id,:][:,vis_id], 
             node_coords = node_coords[vis_id,:],
             title = 'internetwork',
             output_file = savefig,
+            edge_kwargs = {'linewidth':0.5},
         )
     return True
 
@@ -201,8 +210,7 @@ def draw_circos(edge_values, roi_df, node_values=None, savename=None, directed=T
     circle.set_garcs(1,359)
     cmap = plt.cm.Reds
     # draw node importance layer
-    if node_values is not None:
-        
+    if node_values is not None:        
         max_value, min_value = max(node_values), min(node_values)
         for i in node_names.index:    
             curr_node = node_names.loc[i,"ROI Name"]
@@ -217,9 +225,12 @@ def draw_circos(edge_values, roi_df, node_values=None, savename=None, directed=T
     h = 900
     e_pos = circle._garc_dict['ContAIPS1_L'].size/2
     #e_pos = 1
-    g = nx.from_numpy_array(edge_values)  # generate graph for overall patients
+
+    # nx.from_numpy_array: A_ij = from i(source) to j(destination)
+    g = nx.from_numpy_array(edge_values)  # generate graph for overall patients    
     elist = nx.to_pandas_edgelist(g)
-    elist['source'] = df.loc[elist['source'],'ROI Name'].reset_index(drop=True)
+    #print(elist)
+    elist['source'] = df.loc[elist['source'],'ROI Name'].reset_index(drop=True)  
     elist['target'] = df.loc[elist['target'],'ROI Name'].reset_index(drop=True)
     # elist.sort_values(['weight'], ascending=False)[0:50]
     for i, e in elist.iterrows():    
@@ -324,7 +335,9 @@ if __name__=='__main__':
     torch.save(adj_conn_contrast, osp.join(exp_path, f"adj_contrast_mdd-hc_top{args.top}.pkl"))
     pd.DataFrame(adj_conn_contrast.numpy()).to_csv( osp.join(exp_path, f"adj_contrast_mdd-hc_top{args.top}.csv"))
 
-    draw_circos(edge_values=adj_conn_contrast.numpy()*10, roi_df= df, node_values=None, savename=osp.join(exp_path, 'figs', f"adj_contrast_mdd-hc_top{args.top}"), directed=True)
-    draw_ipsilateral_connection(df, adj_conn_contrast,  savefig=osp.join(exp_path, 'figs', f'adj_contrast_mdd-hc_top{args.top}_ipsilateral.png'))
-    draw_intranetwork_connection(df, adj_conn_contrast, savefig=osp.join(exp_path, 'figs', f'adj_contrast_mdd-hc_top{args.top}_intranetwork.png'))
-    draw_internetwork_connection(df, adj_conn_contrast, savefig=osp.join(exp_path, 'figs', f'adj_contrast_mdd-hc_top{args.top}_internetwork.png'))
+    # adj_conn_contrast: Xij means Xj -> Xi 
+    # make Xi -> Xj (d/t networkx.from_numpy & nilearn.plotting.plot_connectome)
+    draw_circos(edge_values=adj_conn_contrast.T.numpy()*10, roi_df= df, node_values=None, savename=osp.join(exp_path, 'figs', f"adj_contrast_mdd-hc_top{args.top}"), directed=True)
+    draw_ipsilateral_connection(df, adj_conn_contrast.T,  savefig=osp.join(exp_path, 'figs', f'adj_contrast_mdd-hc_top{args.top}_ipsilateral.png'))
+    draw_intranetwork_connection(df, adj_conn_contrast.T, savefig=osp.join(exp_path, 'figs', f'adj_contrast_mdd-hc_top{args.top}_intranetwork.png'))
+    draw_internetwork_connection(df, adj_conn_contrast.T, savefig=osp.join(exp_path, 'figs', f'adj_contrast_mdd-hc_top{args.top}_internetwork.png'))
