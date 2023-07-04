@@ -1,4 +1,4 @@
-# YAD_STAGIN
+# YAD_GNN
 
 ### How to use
 
